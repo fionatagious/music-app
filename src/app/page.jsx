@@ -1,60 +1,52 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
 
 export default function Home() {
-  //const stream = useRef(null);
-  // const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [chunks, setChunks] = useState([]);
+  const clipContainer = useRef(null);
   const record = useRef(null);
   const stop = useRef(null);
-  // const soundClips = document.querySelector(".sound-clips");
 
-  // async function getMedia(constraints) {
-  //   let stream = null;
-
-  //   try {
-  //     stream = await navigator.mediaDevices.getUserMedia(constraints);
-  //     /* use the stream */
-  //   } catch (err) {
-  //     /* handle the error */
-  //   }
-  // }
-
-  // useEffect(() => {
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    console.log("getUserMedia supported.");
-    //setStream(navigator.mediaDevices.getUserMedia({ audio: true }));
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const audio = document.querySelector("audio");
-        audio.srcObject = stream;
-        setMediaRecorder(new MediaRecorder(stream));
-      })
-      .catch((err) => {
-        console.error(`The following getUserMedia error occurred: ${err}`);
-      });
-  } else {
-    console.log("getUserMedia not supported on your browser!");
-  }
-  // });
+  useEffect(() => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      console.log("getUserMedia supported.");
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+          setMediaRecorder(new MediaRecorder(stream));
+        })
+        .catch((err) => {
+          console.error(`The following getUserMedia error occurred: ${err}`);
+        });
+    } else {
+      console.log("getUserMedia not supported on your browser!");
+    }
+  }, [])
+  
 
   const handleRecord = () => {
     mediaRecorder.start();
-    console.log(mediaRecorder.state);
-    console.log("recorder started");
     record.current.style.background = "red";
     record.current.style.color = "black";
   };
 
   const handleStop = () => {
-    console.log(mediaRecorder);
     mediaRecorder.stop();
-    console.log(mediaRecorder.state);
-    console.log("recorder stopped");
-    record.current.style.background = "";
-    record.current.style.color = "";
+    mediaRecorder.onstop = function (e) {
+      record.current.style.background = "";
+      record.current.style.color = "";
+      const audio = document.createElement("audio");
+      clipContainer.current.appendChild(audio);
+      audio.controls = true;
+      const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+      setChunks([]);
+      const audioURL = window.URL.createObjectURL(blob);
+      audio.src = audioURL;
+    }
+    mediaRecorder.ondataavailable = function (e) {
+      chunks.push(e.data);
+    };
   };
 
   const handleClick = () => {
@@ -70,11 +62,15 @@ export default function Home() {
     }, 200);
   };
 
+  const handleReset = () => {
+    clipContainer.current.querySelector('audio').remove();
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="max-w-5xl w-full">
         <h1>Our Music App</h1>
-        <audio controls src="" />
+        <div ref={clipContainer}></div>
         <button
           className="border-2 border-indigo-500 p-2 rounded-lg"
           onClick={handleRecord}
@@ -95,6 +91,9 @@ export default function Home() {
           onClick={handleClick}
         >
           Tap to play beat
+        </button>
+        <button className="border-2 border-indigo-500 p-2 rounded-lg" onClick={handleReset}>
+          Reset
         </button>
       </div>
     </main>
