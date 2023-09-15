@@ -1,5 +1,6 @@
-"use client";
-import { useEffect, useState, useRef } from "react";
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 
 export default function Home() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -10,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      console.log("getUserMedia supported.");
+      console.log('getUserMedia supported.');
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
@@ -20,30 +21,27 @@ export default function Home() {
           console.error(`The following getUserMedia error occurred: ${err}`);
         });
     } else {
-      console.log("getUserMedia not supported on your browser!");
+      console.log('getUserMedia not supported on your browser!');
     }
-  }, [])
-  
+  }, []);
 
   const handleRecord = () => {
     mediaRecorder.start();
-    record.current.style.background = "red";
-    record.current.style.color = "black";
+    record.current.classList.add('bg-red-500', 'text-black');
   };
 
   const handleStop = () => {
     mediaRecorder.stop();
     mediaRecorder.onstop = function (e) {
-      record.current.style.background = "";
-      record.current.style.color = "";
-      const audio = document.createElement("audio");
-      clipContainer.current.appendChild(audio);
-      audio.controls = true;
-      const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+      record.current.classList.remove('bg-red-500', 'text-black');
+      const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
       setChunks([]);
       const audioURL = window.URL.createObjectURL(blob);
+      const audio = document.createElement('audio');
+      audio.controls = true;
       audio.src = audioURL;
-    }
+      clipContainer.current.appendChild(audio);
+    };
     mediaRecorder.ondataavailable = function (e) {
       chunks.push(e.data);
     };
@@ -52,7 +50,7 @@ export default function Home() {
   const handleClick = () => {
     var context = new AudioContext();
     var oscillator = context.createOscillator();
-    oscillator.type = "sine";
+    oscillator.type = 'sine';
     oscillator.frequency.value = 300;
     oscillator.connect(context.destination);
     oscillator.start();
@@ -64,22 +62,22 @@ export default function Home() {
 
   const handleReset = () => {
     clipContainer.current.querySelector('audio').remove();
-  }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="max-w-5xl w-full">
+      <div className="w-full max-w-5xl">
         <h1>Our Music App</h1>
         <div ref={clipContainer}></div>
         <button
-          className="border-2 border-indigo-500 p-2 rounded-lg"
+          className="rounded-lg border-2 border-indigo-500 p-2"
           onClick={handleRecord}
           ref={record}
         >
           REC
         </button>
         <button
-          className="border-2 border-indigo-500 p-2 rounded-lg"
+          className="rounded-lg border-2 border-indigo-500 p-2"
           onClick={handleStop}
           ref={stop}
         >
@@ -87,12 +85,15 @@ export default function Home() {
         </button>
 
         <button
-          className="border-2 border-indigo-500 p-2 rounded-lg"
+          className="rounded-lg border-2 border-indigo-500 p-2"
           onClick={handleClick}
         >
           Tap to play beat
         </button>
-        <button className="border-2 border-indigo-500 p-2 rounded-lg" onClick={handleReset}>
+        <button
+          className="rounded-lg border-2 border-indigo-500 p-2"
+          onClick={handleReset}
+        >
           Reset
         </button>
       </div>
