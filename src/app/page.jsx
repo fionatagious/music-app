@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import WaveSurfer from 'wavesurfer.js'
 
 export default function Home() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -8,7 +9,7 @@ export default function Home() {
   const clipContainer = useRef(null);
   const record = useRef(null);
   const stop = useRef(null);
-
+  
   useEffect(() => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       console.log('getUserMedia supported.');
@@ -20,15 +21,28 @@ export default function Home() {
         .catch((err) => {
           console.error(`The following getUserMedia error occurred: ${err}`);
         });
-    } else {
-      console.log('getUserMedia not supported on your browser!');
-    }
-  }, []);
 
-  const handleRecord = () => {
-    mediaRecorder.start();
-    record.current.classList.add('bg-red-500', 'text-black');
-  };
+      } else {
+        console.log('getUserMedia not supported on your browser!');
+      }
+    }, []);
+    
+    const handleRecord = () => {
+      mediaRecorder.start();
+      record.current.classList.add('bg-red-500', 'text-black');
+    };
+
+    const createWaveform = (audioUrl) => {
+      const wavesurfer = WaveSurfer.create({
+        container: document.getElementById('waveform'),
+        waveColor: '#4F4A85',
+        progressColor: '#383351',
+        url: audioUrl,
+      })
+      wavesurfer.once('interaction', () => {
+        wavesurfer.play()
+      })
+  }
 
   const handleStop = () => {
     mediaRecorder.stop();
@@ -40,6 +54,7 @@ export default function Home() {
       const audio = document.createElement('audio');
       audio.controls = true;
       audio.src = audioURL;
+      createWaveform(audioURL);
       clipContainer.current.appendChild(audio);
     };
     mediaRecorder.ondataavailable = function (e) {
@@ -59,15 +74,17 @@ export default function Home() {
       oscillator.stop();
     }, 200);
   };
-
+  
   const handleReset = () => {
     clipContainer.current.querySelector('audio').remove();
   };
-
+  
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="w-full max-w-5xl">
         <h1>Our Music App</h1>
+        <div id="waveform">Audiowave Visualizer</div>
         <div ref={clipContainer}></div>
         <button
           className="rounded-lg border-2 border-indigo-500 p-2"
